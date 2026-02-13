@@ -3,152 +3,199 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tambo · How It Works</title>
-  <meta name="description" content="Tambo 工作原理可视化：组件注册、Schema 转工具、Agent 调用、UI 流式渲染。" />
+  <title>Tambo 组件交互用例展厅</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0d14;
-      --panel: #111827cc;
-      --line: #263042;
-      --text: #e6edff;
-      --muted: #9fb2d9;
-      --cyan: #49f2ff;
-      --violet: #8b7dff;
-      --lime: #b7ff5a;
+      --bg:#0b0f18;--panel:#121a2acc;--line:#263247;--text:#ebf1ff;--muted:#9eb0d0;
+      --c1:#58f0ff;--c2:#8e7dff;--ok:#7dff9a;--warn:#ffd36a;
     }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: 'Outfit', sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(1200px 600px at 80% -20%, #2a1b50 0%, transparent 60%),
-        radial-gradient(900px 500px at -10% 20%, #0a4a5b 0%, transparent 60%),
-        var(--bg);
-      min-height: 100vh;
-    }
-    .noise::before {
-      content: '';
-      position: fixed; inset: 0;
-      pointer-events: none;
-      opacity: .06;
-      background-image: radial-gradient(#fff 0.5px, transparent 0.5px);
-      background-size: 2px 2px;
-    }
-    .wrap { width: min(1080px, 92vw); margin: 0 auto; }
-    header { padding: 64px 0 28px; }
-    .badge {
-      display: inline-flex; gap: 8px; align-items: center;
-      padding: 8px 12px; border: 1px solid #2d3a4f; border-radius: 999px;
-      font: 600 12px 'IBM Plex Mono', monospace; color: var(--muted);
-      backdrop-filter: blur(8px);
-    }
-    h1 { font-size: clamp(34px, 6vw, 68px); line-height: .98; margin: 14px 0; letter-spacing: -0.02em; }
-    .grad { background: linear-gradient(95deg, var(--cyan), #8fb3ff 40%, var(--violet) 80%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .sub { color: var(--muted); max-width: 760px; font-size: clamp(15px, 2.1vw, 21px); }
+    *{box-sizing:border-box} body{margin:0;font-family:Outfit,sans-serif;color:var(--text);
+      background:radial-gradient(1200px 700px at 90% -20%,#2f1f5e 0,transparent 60%),radial-gradient(1000px 700px at -10% 20%,#134f63 0,transparent 60%),var(--bg)}
+    .wrap{width:min(1180px,94vw);margin:auto;padding:30px 0 60px}
+    .tag{display:inline-block;padding:6px 12px;border:1px solid #33445f;border-radius:99px;font:600 12px 'IBM Plex Mono',monospace;color:var(--muted)}
+    h1{font-size:clamp(28px,5vw,52px);margin:12px 0 8px;line-height:1.05}
+    .grad{background:linear-gradient(95deg,var(--c1),#9fb4ff 40%,var(--c2));-webkit-background-clip:text;background-clip:text;color:transparent}
+    .sub{color:var(--muted);font-size:18px;margin:0 0 20px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;backdrop-filter:blur(8px)}
+    .k{font:600 12px 'IBM Plex Mono',monospace;color:#8ea2c8}
+    .ttl{margin:8px 0 4px;font-size:24px}
+    .desc{margin:0 0 14px;color:#b7c8ea}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    button,input,select,textarea{font:inherit}
+    button{border:1px solid #3a4d6d;background:#1b263a;color:#e7efff;border-radius:10px;padding:8px 12px;cursor:pointer}
+    button:hover{filter:brightness(1.1)}
+    .btn-main{background:linear-gradient(90deg,var(--ok),var(--c1));color:#0b1a20;border:none;font-weight:700}
+    .panel{border:1px solid #2d3a52;border-radius:12px;padding:12px;margin-top:10px;background:#0d1423}
 
-    .flow {
-      margin-top: 30px;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-    }
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 18px;
-      min-height: 180px;
-      position: relative;
-      overflow: hidden;
-    }
-    .card::after {
-      content: '';
-      position: absolute;
-      inset: auto -30% -50% -30%;
-      height: 120px;
-      background: radial-gradient(circle at center, #7f8cff33, transparent 60%);
-      pointer-events: none;
-    }
-    .k { font: 600 12px 'IBM Plex Mono', monospace; color: #8fa4c8; }
-    h3 { margin: 8px 0; font-size: 20px; }
-    p { margin: 0; color: #b8c8e8; line-height: 1.55; }
-    .arrow { text-align: center; opacity: .45; padding-top: 70px; font-size: 26px; }
+    /* chart */
+    .bars{display:flex;align-items:flex-end;height:160px;gap:8px;padding:8px;border-bottom:1px dashed #334b6f}
+    .bar{flex:1;background:linear-gradient(180deg,#8f7dff,#49e8ff);border-radius:8px 8px 3px 3px;min-height:8px;position:relative;transition:all .25s}
+    .bar span{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font:11px 'IBM Plex Mono';color:#b7c9ef}
 
-    .section { margin: 44px 0; display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; }
-    pre {
-      margin: 0; background: #090d17; border: 1px solid #202a3a; border-radius: 16px;
-      padding: 16px; color: #d9e6ff; overflow: auto; font: 13px/1.45 'IBM Plex Mono', monospace;
-    }
-    .mini {
-      background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px;
-    }
-    .mini ul { margin: 10px 0 0 16px; color: #bdd0f8; }
-    .cta {
-      margin: 40px 0 70px;
-      display: flex; flex-wrap: wrap; gap: 12px;
-    }
-    .btn {
-      text-decoration: none; color: #02131a;
-      background: linear-gradient(90deg, var(--lime), var(--cyan));
-      padding: 12px 18px; border-radius: 12px; font-weight: 700;
-    }
-    .btn.secondary { color: #dce8ff; background: #1a2435; border: 1px solid #2f3d57; }
-    footer { padding: 0 0 36px; color: #8da2c8; font-size: 14px; }
-    @media (max-width: 920px){
-      .flow { grid-template-columns: 1fr 1fr; }
-      .arrow { display:none; }
-      .section { grid-template-columns: 1fr; }
-    }
+    /* task board */
+    .tasks{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .col{background:#0d1525;border:1px solid #2d405b;border-radius:10px;padding:10px}
+    .col h4{margin:0 0 8px;font-size:14px;color:#b9cdf3}
+    .pill{padding:7px 9px;margin:6px 0;border-radius:9px;background:#192740;border:1px solid #2e4261;font-size:14px;display:flex;justify-content:space-between;align-items:center}
+
+    /* note */
+    .note{padding:12px;border-radius:12px;min-height:130px;color:#0c1322}
+    .note.yellow{background:#ffe38a}.note.blue{background:#98d8ff}.note.green{background:#9bf3b3}.note.white{background:#f0f4ff}
+
+    /* tool console */
+    .console{font:13px 'IBM Plex Mono',monospace;white-space:pre-wrap;max-height:180px;overflow:auto;background:#0a121f;border:1px solid #2c3d57;padding:10px;border-radius:10px;color:#cfe0ff}
+    .ok{color:#8bffae}.warn{color:#ffd36a}
+    footer{margin-top:18px;color:#8ea2c9;font-size:14px}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
-<body class="noise">
+<body>
   <div class="wrap">
-    <header>
-      <span class="badge">TAMBO · HOW IT WORKS</span>
-      <h1>让 Agent <span class="grad">直接说你的 UI 语言</span></h1>
-      <p class="sub">核心机制：你先注册组件并声明 Zod Schema，Tambo 把它们变成 LLM 可调用的工具，Agent 在对话中按需调用，然后把 props 流式推送到前端组件渲染。</p>
-    </header>
+    <span class="tag">TAMBO · REAL INTERACTIVE EXAMPLES</span>
+    <h1>每个组件分别能达到什么效果：<span class="grad">直接上可交互用例</span></h1>
+    <p class="sub">下面 4 块分别对应 Tambo 常见组件能力：图表生成、可持续更新任务板、可编辑便签、工具调用反馈。</p>
 
-    <section class="flow">
-      <article class="card"><div class="k">STEP 01</div><h3>注册组件</h3><p>把 Graph、TaskBoard、Note 这类 React 组件注册给 Tambo。</p></article>
-      <div class="arrow">→</div>
-      <article class="card"><div class="k">STEP 02</div><h3>Schema 变工具</h3><p>propsSchema（Zod）会自动转换为 LLM tool definitions。</p></article>
-      <div class="arrow">→</div>
-      <article class="card"><div class="k">STEP 03</div><h3>Agent 调用</h3><p>用户说“按区域展示销售”，Agent 决定调用 Graph 并生成 props。</p></article>
-      <div class="arrow">→</div>
-      <article class="card"><div class="k">STEP 04</div><h3>流式渲染</h3><p>组件按流式 props 渲染，支持状态更新、取消、重连与恢复。</p></article>
+    <section class="grid">
+      <article class="card">
+        <div class="k">COMPONENT 01 · Graph</div>
+        <h3 class="ttl">数据图表组件（可切换类型）</h3>
+        <p class="desc">模拟 Agent 返回 props 后，组件渲染不同视图。这里用同一份数据切换展示方式。</p>
+        <div class="row">
+          <button onclick="setChart('sales')">销售额</button>
+          <button onclick="setChart('users')">用户数</button>
+          <button onclick="randomize()">随机重算</button>
+        </div>
+        <div class="panel">
+          <div class="bars" id="bars"></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="k">COMPONENT 02 · TaskBoard (Interactable)</div>
+        <h3 class="ttl">任务看板（可持续交互）</h3>
+        <p class="desc">模拟用户继续提需求时，组件不是重建，而是持续更新状态。</p>
+        <div class="row">
+          <input id="taskInput" placeholder="新增任务，例如：整理竞品页面" style="flex:1;min-width:220px;background:#0d1525;border:1px solid #30445f;color:#dce8ff;border-radius:10px;padding:9px"/>
+          <button class="btn-main" onclick="addTask()">添加</button>
+        </div>
+        <div class="panel tasks">
+          <div class="col"><h4>待办</h4><div id="todo"></div></div>
+          <div class="col"><h4>已完成</h4><div id="done"></div></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="k">COMPONENT 03 · Note (Interactable)</div>
+        <h3 class="ttl">便签组件（可编辑 + 可改主题）</h3>
+        <p class="desc">对应 withInteractable(Note) 场景：标题/内容/颜色都可由 Agent 或用户更新。</p>
+        <div class="row">
+          <input id="noteTitle" value="产品改版备忘" style="background:#0d1525;border:1px solid #30445f;color:#dce8ff;border-radius:10px;padding:9px"/>
+          <select id="noteColor" onchange="renderNote()" style="background:#0d1525;border:1px solid #30445f;color:#dce8ff;border-radius:10px;padding:9px">
+            <option value="yellow">yellow</option><option value="blue">blue</option><option value="green">green</option><option value="white">white</option>
+          </select>
+        </div>
+        <textarea id="noteBody" oninput="renderNote()" style="width:100%;margin-top:8px;background:#0d1525;border:1px solid #30445f;color:#dce8ff;border-radius:10px;padding:9px;min-height:74px">1) 首屏文案更聚焦结果
+2) CTA 按钮改成“立即试用”
+3) 补一个真实案例模块</textarea>
+        <div class="panel"><div id="notePreview" class="note yellow"></div></div>
+      </article>
+
+      <article class="card">
+        <div class="k">COMPONENT 04 · Tool Result Panel</div>
+        <h3 class="ttl">工具调用结果组件（真实反馈流）</h3>
+        <p class="desc">模拟 local tools / MCP 调用后，界面即时显示执行状态和结果。</p>
+        <div class="row">
+          <button onclick="runTool('weather')">调用 getWeather</button>
+          <button onclick="runTool('crm')">调用 listLeads</button>
+          <button onclick="runTool('publish')">调用 publishDraft</button>
+        </div>
+        <div class="panel">
+          <div id="console" class="console">等待调用...</div>
+        </div>
+      </article>
     </section>
 
-    <section class="section">
-      <pre><code>const components: TamboComponent[] = [{
-  name: "Graph",
-  description: "Displays data as charts",
-  component: Graph,
-  propsSchema: z.object({
-    data: z.array(z.object({ name: z.string(), value: z.number() })),
-    type: z.enum(["line", "bar", "pie"]),
-  }),
-}];</code></pre>
-      <aside class="mini">
-        <h3 style="margin:0">Why this matters</h3>
-        <ul>
-          <li>不用手动维护“工具输出 → 组件映射”</li>
-          <li>同一个会话里支持可交互组件持续更新</li>
-          <li>MCP、Local Tools、上下文注入都可并入链路</li>
-        </ul>
-      </aside>
-    </section>
-
-    <div class="cta">
-      <a class="btn" href="https://github.com/tambo-ai/tambo#how-it-works" target="_blank" rel="noreferrer">查看官方 How It Works</a>
-      <a class="btn secondary" href="https://docs.tambo.co" target="_blank" rel="noreferrer">阅读文档</a>
-    </div>
-
-    <footer>Built from Tambo README “How It Works” section · Designed & shipped for 陈佳免</footer>
+    <footer>
+      说明：这是“组件效果演示版”，用于直观看每个组件的交互能力。若你要，我下一步可以直接改成真正接 Tambo SDK 的可运行项目结构（含 Provider、ThreadInput、真实 tool 注册）。
+    </footer>
   </div>
+
+<script>
+  const state = {
+    chart: {
+      sales: [120, 180, 90, 210, 160, 240],
+      users: [22, 40, 28, 53, 47, 61],
+      mode: 'sales'
+    },
+    tasks: [
+      { id: 1, text: '梳理需求边界', done: false },
+      { id: 2, text: '产出首版交互稿', done: false },
+      { id: 3, text: '完成评审并修订', done: true }
+    ]
+  };
+
+  function renderChart(){
+    const data = state.chart[state.chart.mode];
+    const bars = document.getElementById('bars');
+    const max = Math.max(...data);
+    bars.innerHTML = data.map((v,i)=>`<div class="bar" style="height:${(v/max)*140+12}px"><span>${v}</span></div>`).join('');
+  }
+  function setChart(mode){ state.chart.mode = mode; renderChart(); }
+  function randomize(){
+    state.chart[state.chart.mode] = state.chart[state.chart.mode].map(()=>Math.floor(Math.random()*220)+20);
+    renderChart();
+  }
+
+  function renderTasks(){
+    const todo = document.getElementById('todo');
+    const done = document.getElementById('done');
+    const t = state.tasks.filter(x=>!x.done).map(x=>`<div class='pill'>${x.text}<button onclick='toggleTask(${x.id})'>完成</button></div>`).join('');
+    const d = state.tasks.filter(x=>x.done).map(x=>`<div class='pill'>${x.text}<button onclick='toggleTask(${x.id})'>撤回</button></div>`).join('');
+    todo.innerHTML = t || '<div style="color:#7f93b8">暂无</div>';
+    done.innerHTML = d || '<div style="color:#7f93b8">暂无</div>';
+  }
+  function addTask(){
+    const el = document.getElementById('taskInput');
+    const text = el.value.trim();
+    if(!text) return;
+    state.tasks.unshift({ id: Date.now(), text, done:false });
+    el.value=''; renderTasks();
+  }
+  function toggleTask(id){
+    const t = state.tasks.find(x=>x.id===id); if(!t) return; t.done=!t.done; renderTasks();
+  }
+
+  function renderNote(){
+    const title = document.getElementById('noteTitle').value;
+    const body = document.getElementById('noteBody').value;
+    const color = document.getElementById('noteColor').value;
+    const box = document.getElementById('notePreview');
+    box.className = 'note ' + color;
+    box.innerHTML = `<strong>${title}</strong><div style='margin-top:8px;white-space:pre-wrap'>${body}</div>`;
+  }
+
+  async function runTool(type){
+    const c = document.getElementById('console');
+    const now = new Date().toLocaleTimeString();
+    c.innerHTML = `[${now}] 调用 ${type}...\n`;
+    await new Promise(r=>setTimeout(r, 600));
+
+    if(type==='weather'){
+      c.innerHTML += `<span class='ok'>✓ getWeather 成功</span>\n返回：上海 27°C，东南风 3 级，建议：可外出。`;
+    } else if(type==='crm'){
+      c.innerHTML += `<span class='ok'>✓ listLeads 成功</span>\n返回：本周新增线索 14 条，待跟进 5 条（高优先级 2 条）。`;
+    } else {
+      c.innerHTML += `<span class='warn'>! publishDraft 需要二次确认</span>\n状态：草稿已校验通过，等待用户确认发布。`;
+    }
+  }
+
+  renderChart();
+  renderTasks();
+  renderNote();
+</script>
 </body>
 </html>
