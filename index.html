@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tambo · How It Works</title>
+  <meta name="description" content="Tambo 工作原理可视化：组件注册、Schema 转工具、Agent 调用、UI 流式渲染。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0d14;
+      --panel: #111827cc;
+      --line: #263042;
+      --text: #e6edff;
+      --muted: #9fb2d9;
+      --cyan: #49f2ff;
+      --violet: #8b7dff;
+      --lime: #b7ff5a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Outfit', sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 80% -20%, #2a1b50 0%, transparent 60%),
+        radial-gradient(900px 500px at -10% 20%, #0a4a5b 0%, transparent 60%),
+        var(--bg);
+      min-height: 100vh;
+    }
+    .noise::before {
+      content: '';
+      position: fixed; inset: 0;
+      pointer-events: none;
+      opacity: .06;
+      background-image: radial-gradient(#fff 0.5px, transparent 0.5px);
+      background-size: 2px 2px;
+    }
+    .wrap { width: min(1080px, 92vw); margin: 0 auto; }
+    header { padding: 64px 0 28px; }
+    .badge {
+      display: inline-flex; gap: 8px; align-items: center;
+      padding: 8px 12px; border: 1px solid #2d3a4f; border-radius: 999px;
+      font: 600 12px 'IBM Plex Mono', monospace; color: var(--muted);
+      backdrop-filter: blur(8px);
+    }
+    h1 { font-size: clamp(34px, 6vw, 68px); line-height: .98; margin: 14px 0; letter-spacing: -0.02em; }
+    .grad { background: linear-gradient(95deg, var(--cyan), #8fb3ff 40%, var(--violet) 80%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .sub { color: var(--muted); max-width: 760px; font-size: clamp(15px, 2.1vw, 21px); }
+
+    .flow {
+      margin-top: 30px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      min-height: 180px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::after {
+      content: '';
+      position: absolute;
+      inset: auto -30% -50% -30%;
+      height: 120px;
+      background: radial-gradient(circle at center, #7f8cff33, transparent 60%);
+      pointer-events: none;
+    }
+    .k { font: 600 12px 'IBM Plex Mono', monospace; color: #8fa4c8; }
+    h3 { margin: 8px 0; font-size: 20px; }
+    p { margin: 0; color: #b8c8e8; line-height: 1.55; }
+    .arrow { text-align: center; opacity: .45; padding-top: 70px; font-size: 26px; }
+
+    .section { margin: 44px 0; display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; }
+    pre {
+      margin: 0; background: #090d17; border: 1px solid #202a3a; border-radius: 16px;
+      padding: 16px; color: #d9e6ff; overflow: auto; font: 13px/1.45 'IBM Plex Mono', monospace;
+    }
+    .mini {
+      background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px;
+    }
+    .mini ul { margin: 10px 0 0 16px; color: #bdd0f8; }
+    .cta {
+      margin: 40px 0 70px;
+      display: flex; flex-wrap: wrap; gap: 12px;
+    }
+    .btn {
+      text-decoration: none; color: #02131a;
+      background: linear-gradient(90deg, var(--lime), var(--cyan));
+      padding: 12px 18px; border-radius: 12px; font-weight: 700;
+    }
+    .btn.secondary { color: #dce8ff; background: #1a2435; border: 1px solid #2f3d57; }
+    footer { padding: 0 0 36px; color: #8da2c8; font-size: 14px; }
+    @media (max-width: 920px){
+      .flow { grid-template-columns: 1fr 1fr; }
+      .arrow { display:none; }
+      .section { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="noise">
+  <div class="wrap">
+    <header>
+      <span class="badge">TAMBO · HOW IT WORKS</span>
+      <h1>让 Agent <span class="grad">直接说你的 UI 语言</span></h1>
+      <p class="sub">核心机制：你先注册组件并声明 Zod Schema，Tambo 把它们变成 LLM 可调用的工具，Agent 在对话中按需调用，然后把 props 流式推送到前端组件渲染。</p>
+    </header>
+
+    <section class="flow">
+      <article class="card"><div class="k">STEP 01</div><h3>注册组件</h3><p>把 Graph、TaskBoard、Note 这类 React 组件注册给 Tambo。</p></article>
+      <div class="arrow">→</div>
+      <article class="card"><div class="k">STEP 02</div><h3>Schema 变工具</h3><p>propsSchema（Zod）会自动转换为 LLM tool definitions。</p></article>
+      <div class="arrow">→</div>
+      <article class="card"><div class="k">STEP 03</div><h3>Agent 调用</h3><p>用户说“按区域展示销售”，Agent 决定调用 Graph 并生成 props。</p></article>
+      <div class="arrow">→</div>
+      <article class="card"><div class="k">STEP 04</div><h3>流式渲染</h3><p>组件按流式 props 渲染，支持状态更新、取消、重连与恢复。</p></article>
+    </section>
+
+    <section class="section">
+      <pre><code>const components: TamboComponent[] = [{
+  name: "Graph",
+  description: "Displays data as charts",
+  component: Graph,
+  propsSchema: z.object({
+    data: z.array(z.object({ name: z.string(), value: z.number() })),
+    type: z.enum(["line", "bar", "pie"]),
+  }),
+}];</code></pre>
+      <aside class="mini">
+        <h3 style="margin:0">Why this matters</h3>
+        <ul>
+          <li>不用手动维护“工具输出 → 组件映射”</li>
+          <li>同一个会话里支持可交互组件持续更新</li>
+          <li>MCP、Local Tools、上下文注入都可并入链路</li>
+        </ul>
+      </aside>
+    </section>
+
+    <div class="cta">
+      <a class="btn" href="https://github.com/tambo-ai/tambo#how-it-works" target="_blank" rel="noreferrer">查看官方 How It Works</a>
+      <a class="btn secondary" href="https://docs.tambo.co" target="_blank" rel="noreferrer">阅读文档</a>
+    </div>
+
+    <footer>Built from Tambo README “How It Works” section · Designed & shipped for 陈佳免</footer>
+  </div>
+</body>
+</html>
